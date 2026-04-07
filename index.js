@@ -10,12 +10,26 @@ const VIDEO_URL = process.env.VIDEO_URL;
 
 app.post('/sale', async (req, res) => {
   const channelId = req.body.channel_id;
-  res.status(200).send('');
+  const userId = req.body.user_id;
 
   try {
     await slack.conversations.join({ channel: channelId });
   } catch (e) {
-    // Private channel - bot must be invited manually, that's fine
+    // Private channel - check if bot is already a member
+    try {
+      const info = await slack.conversations.info({ channel: channelId });
+      if (!info.channel.is_member) {
+        // Bot not in channel - send ephemeral message only visible to the user who typed /sale
+        await slack.chat.postEphemeral({
+          channel: channelId,
+          user: userId,
+          text: '👋 To use /sale in a private channel, please type `/invite @Operate Sale Bot` first, then try again.',
+        });
+        return;
+      }
+    } catch (e2) {
+      return;
+    }
   }
 
   const videoRes = await fetch(VIDEO_URL);
