@@ -4,18 +4,23 @@ const fetch = require('node-fetch');
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 const VIDEO_URL = process.env.VIDEO_URL;
 
 app.post('/sale', (req, res) => {
+  console.log('Received request body:', JSON.stringify(req.body));
   const channelId = req.body.channel_id;
   const userId = req.body.user_id;
 
-  // Respond to Slack immediately to avoid timeout
   res.status(200).send('');
 
-  // Do all the work asynchronously after responding
+  if (!channelId) {
+    console.log('No channel_id found in request');
+    return;
+  }
+
   handleSale(channelId, userId);
 });
 
@@ -34,6 +39,7 @@ async function handleSale(channelId, userId) {
         return;
       }
     } catch (e2) {
+      console.log('Error checking channel membership:', e2.message);
       return;
     }
   }
@@ -45,8 +51,3 @@ async function handleSale(channelId, userId) {
     channel_id: channelId,
     filename: 'sale.mp4',
     file: buffer,
-    initial_comment: '🎉 SALE CLOSED!',
-  });
-}
-
-app.listen(3000, () => console.log('Bot running'));
