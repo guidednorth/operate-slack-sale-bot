@@ -12,8 +12,6 @@ app.post('/sale', async (req, res) => {
   const channelId = req.body.channel_id;
   res.status(200).send('');
 
-  await slack.conversations.join({ channel: channelId });
-
   const videoRes = await fetch(VIDEO_URL);
   const buffer = await videoRes.buffer();
 
