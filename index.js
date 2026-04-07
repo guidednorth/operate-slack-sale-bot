@@ -40,12 +40,15 @@ async function handleSale(channelId, userId) {
       return;
     }
   }
+
   const videoRes = await fetch(VIDEO_URL);
   const buffer = await videoRes.buffer();
-  await slack.filesUploadV2({
-    channel_id: channelId,
+
+  await slack.apiCall('files.upload', {
+    channels: channelId,
     filename: 'sale.mp4',
-    file: buffer,
+    content: buffer,
+    filetype: 'mp4',
     initial_comment: '🎉 SALE CLOSED!',
   });
 }
