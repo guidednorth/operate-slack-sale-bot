@@ -8,18 +8,24 @@ app.use(express.urlencoded({ extended: true }));
 const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
 const VIDEO_URL = process.env.VIDEO_URL;
 
-app.post('/sale', async (req, res) => {
+app.post('/sale', (req, res) => {
   const channelId = req.body.channel_id;
   const userId = req.body.user_id;
 
+  // Respond to Slack immediately to avoid timeout
+  res.status(200).send('');
+
+  // Do all the work asynchronously after responding
+  handleSale(channelId, userId);
+});
+
+async function handleSale(channelId, userId) {
   try {
     await slack.conversations.join({ channel: channelId });
   } catch (e) {
-    // Private channel - check if bot is already a member
     try {
       const info = await slack.conversations.info({ channel: channelId });
       if (!info.channel.is_member) {
-        // Bot not in channel - send ephemeral message only visible to the user who typed /sale
         await slack.chat.postEphemeral({
           channel: channelId,
           user: userId,
@@ -41,6 +47,6 @@ app.post('/sale', async (req, res) => {
     file: buffer,
     initial_comment: '🎉 SALE CLOSED!',
   });
-});
+}
 
 app.listen(3000, () => console.log('Bot running'));
