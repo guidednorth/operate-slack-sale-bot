@@ -12,6 +12,12 @@ app.post('/sale', async (req, res) => {
   const channelId = req.body.channel_id;
   res.status(200).send('');
 
+  try {
+    await slack.conversations.join({ channel: channelId });
+  } catch (e) {
+    // Private channel - bot must be invited manually, that's fine
+  }
+
   const videoRes = await fetch(VIDEO_URL);
   const buffer = await videoRes.buffer();
 
